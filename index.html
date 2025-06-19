@@ -34,6 +34,7 @@
             background-color: var(--light-gray);
             color: var(--dark-gray);
             line-height: 1.6;
+            transition: background-image 0.5s ease-in-out; /* Adicionado para transição suave do BG */
         }
         
         .container {
@@ -511,7 +512,134 @@
                 font-size: 0.9rem;
             }
         }
+
+        /* Modal de Configurações */
+        .modal {
+            display: none; /* Escondido por padrão */
+            position: fixed; /* Fica no lugar mesmo com a rolagem */
+            z-index: 1000; /* Acima de tudo */
+            left: 0;
+            top: 0;
+            width: 100%; /* Largura total */
+            height: 100%; /* Altura total */
+            overflow: auto; /* Habilita rolagem se necessário */
+            background-color: rgba(0,0,0,0.4); /* Fundo semi-transparente */
+            backdrop-filter: blur(5px); /* Efeito de desfoque */
+            -webkit-backdrop-filter: blur(5px); /* Compatibilidade Safari */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: auto; /* Centraliza vertical e horizontalmente */
+            padding: 2rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            width: 80%; /* Largura do modal */
+            max-width: 500px; /* Largura máxima */
+            box-shadow: var(--shadow);
+            position: relative;
+            animation: fadeIn 0.3s ease-out; /* Animação de entrada */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-button {
+            color: var(--dark-gray);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--danger-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h2, .modal-content h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-content hr {
+            border: 0;
+            border-top: 1px solid var(--medium-gray);
+            margin: 1rem 0;
+        }
+
+        .background-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .background-options label {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .background-options label:hover {
+            background-color: var(--light-gray);
+        }
+
+        .background-options input[type="radio"] {
+            margin-right: 0.8rem;
+            accent-color: var(--primary-color);
+        }
+
+        /* Estilos para o formulário de adição de produto */
+        .add-product-form {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            background-color: var(--white);
+            margin-bottom: 1.5rem;
+        }
+
+        .add-product-form input, .add-product-form select {
+            width: calc(100% - 20px);
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .add-product-form button {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--primary-color);
+            color: var(--white);
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .add-product-form button:hover {
+            background-color: var(--primary-hover);
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -530,22 +658,29 @@
                 </div>
                 
                 <div class="product-grid" id="product-list">
-                    <!-- Produtos serão carregados aqui via JavaScript -->
-                </div>
+                    </div>
             </div>
             
             <div class="tab-content" id="sales-tab">
                 <h2>Histórico de Vendas</h2>
                 <div id="sales-history">
-                    <!-- Histórico de vendas será carregado aqui -->
-                </div>
+                    </div>
             </div>
             
             <div class="tab-content" id="inventory-tab">
                 <h2>Gerenciamento de Estoque</h2>
-                <div id="inventory-management">
-                    <!-- Gerenciamento de estoque será carregado aqui -->
+                
+                <div class="add-product-form">
+                    <h3>Adicionar Novo Produto</h3>
+                    <input type="text" id="new-product-name" placeholder="Nome do Produto" required>
+                    <input type="text" id="new-product-category" placeholder="Categoria" required>
+                    <input type="number" id="new-product-price" placeholder="Preço (R$)" step="0.01" min="0" required>
+                    <input type="number" id="new-product-stock" placeholder="Estoque Inicial" min="0" required>
+                    <button id="add-product-btn">Adicionar Produto</button>
                 </div>
+
+                <div id="inventory-management">
+                    </div>
             </div>
         </div>
         
@@ -554,7 +689,6 @@
             
             <div class="cart">
                 <div class="cart-items" id="cart-items">
-                    <!-- Itens do carrinho serão adicionados aqui -->
                     <div class="empty-cart">Carrinho vazio</div>
                 </div>
                 
@@ -595,388 +729,45 @@
                     <button class="btn btn-danger" id="cancel-sale">Cancelar</button>
                     <button class="btn btn-primary" id="hold-sale">Segurar</button>
                     <button class="btn btn-success" id="finish-sale">Finalizar</button>
-                </div>
+                    <button class="btn btn-primary" id="settings-btn">Configurações</button> </div>
             </div>
             
             <div class="receipt" id="receipt" style="display: none;">
                 <h3>RECIBO DE VENDA</h3>
                 <div id="receipt-content">
-                    <!-- Conteúdo do recibo será gerado aqui -->
-                </div>
+                    </div>
                 <button class="btn btn-primary no-print" style="width: 100%; margin-top: 1rem;" onclick="printReceipt()">Imprimir Recibo</button>
+                <button class="btn btn-success no-print" style="width: 100%; margin-top: 0.5rem;" onclick="saveReceiptAsPdf()">Salvar Recibo (PDF)</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Banco de dados de produtos (simulado)
-        let products = [
-            { id: 1, name: "Arroz 5kg", price: 22.90, stock: 50, category: "Alimentos" },
-            { id: 2, name: "Feijão 1kg", price: 8.50, stock: 60, category: "Alimentos" },
-            { id: 3, name: "Óleo de Soja", price: 7.20, stock: 40, category: "Alimentos" },
-            { id: 4, name: "Açúcar 1kg", price: 4.30, stock: 70, category: "Alimentos" },
-            { id: 5, name: "Café 500g", price: 12.90, stock: 30, category: "Alimentos" },
-            { id: 6, name: "Sabão em Pó", price: 15.80, stock: 25, category: "Limpeza" },
-            { id: 7, name: "Detergente", price: 2.50, stock: 80, category: "Limpeza" },
-            { id: 8, name: "Desinfetante", price: 6.90, stock: 35, category: "Limpeza" },
-            { id: 9, name: "Shampoo", price: 14.50, stock: 20, category: "Higiene" },
-            { id: 10, name: "Sabonete", price: 1.80, stock: 100, category: "Higiene" }
-        ];
-
-        // Carrinho de compras
-        let cart = [];
-        
-        // Histórico de vendas
-        let salesHistory = [];
-
-        // Elementos DOM
-        const productList = document.getElementById('product-list');
-        const cartItems = document.getElementById('cart-items');
-        const cartTotal = document.getElementById('cart-total');
-        const productSearch = document.getElementById('product-search');
-        const cancelSaleBtn = document.getElementById('cancel-sale');
-        const holdSaleBtn = document.getElementById('hold-sale');
-        const finishSaleBtn = document.getElementById('finish-sale');
-        const receipt = document.getElementById('receipt');
-        const receiptContent = document.getElementById('receipt-content');
-        const tabs = document.querySelectorAll('.tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const paymentMethods = document.querySelectorAll('input[name="payment"]');
-        const cashChangeContainer = document.getElementById('cash-change-container');
-        const cashChangeInput = document.getElementById('cash-change');
-
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            renderProducts();
-            setupEventListeners();
-            cashChangeContainer.style.display = 'none';
-        });
-
-        // Renderiza a lista de produtos
-        function renderProducts(filter = '') {
-            productList.innerHTML = '';
-            
-            const filteredProducts = products.filter(product => 
-                product.name.toLowerCase().includes(filter.toLowerCase()) ||
-                product.category.toLowerCase().includes(filter.toLowerCase())
-            );
-            
-            if (filteredProducts.length === 0) {
-                productList.innerHTML = '<div class="empty-cart">Nenhum produto encontrado</div>';
-                return;
-            }
-            
-            filteredProducts.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                productCard.innerHTML = `
-                    <h3>${product.name}</h3>
-                    <p>${product.category}</p>
-                    <p class="price">R$ ${product.price.toFixed(2)}</p>
-                    <p>Estoque: ${product.stock}</p>
-                `;
-                productCard.addEventListener('click', () => addToCart(product));
-                productList.appendChild(productCard);
-            });
-        }
-
-        // Adiciona produto ao carrinho
-        function addToCart(product) {
-            const existingItem = cart.find(item => item.id === product.id);
-            
-            if (existingItem) {
-                if (existingItem.quantity < product.stock) {
-                    existingItem.quantity++;
-                } else {
-                    alert('Quantidade em estoque insuficiente!');
-                    return;
-                }
-            } else {
-                if (product.stock > 0) {
-                    cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        quantity: 1
-                    });
-                } else {
-                    alert('Produto sem estoque!');
-                    return;
-                }
-            }
-            
-            updateCart();
-        }
-
-        // Atualiza o carrinho na tela
-        function updateCart() {
-            cartItems.innerHTML = '';
-            
-            if (cart.length === 0) {
-                cartItems.innerHTML = '<div class="empty-cart">Carrinho vazio</div>';
-                cartTotal.textContent = 'Total: R$ 0,00';
-                return;
-            }
-            
-            let total = 0;
-            
-            cart.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'cart-item';
-                itemElement.innerHTML = `
-                    <div class="cart-item-info">
-                        <h3>${item.name}</h3>
-                        <p>R$ ${item.price.toFixed(2)}</p>
-                    </div>
-                    <div class="cart-item-actions">
-                        <div class="quantity-control">
-                            <button class="quantity-btn decrease" data-id="${item.id}">-</button>
-                            <span class="quantity">${item.quantity}</span>
-                            <button class="quantity-btn increase" data-id="${item.id}">+</button>
-                        </div>
-                        <button class="remove-btn" data-id="${item.id}">Remover</button>
-                    </div>
-                `;
-                
-                cartItems.appendChild(itemElement);
-                total += item.price * item.quantity;
-            });
-            
-            cartTotal.textContent = `Total: R$ ${total.toFixed(2)}`;
-            
-            // Adiciona event listeners para os botões de quantidade e remoção
-            document.querySelectorAll('.decrease').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.getAttribute('data-id'));
-                    decreaseQuantity(id);
-                });
-            });
-            
-            document.querySelectorAll('.increase').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.getAttribute('data-id'));
-                    increaseQuantity(id);
-                });
-            });
-            
-            document.querySelectorAll('.remove-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = parseInt(e.target.getAttribute('data-id'));
-                    removeFromCart(id);
-                });
-            });
-        }
-
-        // Diminui a quantidade de um item no carrinho
-        function decreaseQuantity(id) {
-            const item = cart.find(item => item.id === id);
-            
-            if (item.quantity > 1) {
-                item.quantity--;
-            } else {
-                removeFromCart(id);
-                return;
-            }
-            
-            updateCart();
-        }
-
-        // Aumenta a quantidade de um item no carrinho
-        function increaseQuantity(id) {
-            const item = cart.find(item => item.id === id);
-            const product = products.find(p => p.id === id);
-            
-            if (item.quantity < product.stock) {
-                item.quantity++;
-            } else {
-                alert('Quantidade em estoque insuficiente!');
-                return;
-            }
-            
-            updateCart();
-        }
-
-        // Remove um item do carrinho
-        function removeFromCart(id) {
-            cart = cart.filter(item => item.id !== id);
-            updateCart();
-        }
-
-        // Configura os event listeners
-        function setupEventListeners() {
-            // Pesquisa de produtos
-            productSearch.addEventListener('input', (e) => {
-                renderProducts(e.target.value);
-            });
-            
-            // Botões de ação
-            cancelSaleBtn.addEventListener('click', cancelSale);
-            holdSaleBtn.addEventListener('click', holdSale);
-            finishSaleBtn.addEventListener('click', finishSale);
-            
-            // Tabs
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(c => c.classList.remove('active'));
-                    
-                    tab.classList.add('active');
-                    document.getElementById(`${tab.getAttribute('data-tab')}-tab`).classList.add('active');
-                });
-            });
-            
-            // Métodos de pagamento
-            paymentMethods.forEach(method => {
-                method.addEventListener('change', (e) => {
-                    if (e.target.value === 'Dinheiro') {
-                        cashChangeContainer.style.display = 'block';
-                    } else {
-                        cashChangeContainer.style.display = 'none';
-                    }
-                });
-            });
-        }
-
-        // Cancela a venda atual
-        function cancelSale() {
-            if (confirm('Tem certeza que deseja cancelar a venda atual?')) {
-                cart = [];
-                updateCart();
-                document.getElementById('customer-name').value = '';
-                document.getElementById('customer-cpf').value = '';
-                document.getElementById('cash').checked = true;
-                cashChangeContainer.style.display = 'none';
-                cashChangeInput.value = '';
-                receipt.style.display = 'none';
-            }
-        }
-
-        // Segura a venda atual (simulação)
-        function holdSale() {
-            if (cart.length === 0) {
-                alert('Carrinho vazio!');
-                return;
-            }
-            
-            alert('Venda segura temporariamente. Você pode retomar mais tarde.');
-            // Em um sistema real, isso salvaria a venda em um estado "pendente"
-        }
-
-        // Finaliza a venda
-        function finishSale() {
-            if (cart.length === 0) {
-                alert('Carrinho vazio!');
-                return;
-            }
-            
-            const customerName = document.getElementById('customer-name').value || 'Consumidor';
-            const customerCpf = document.getElementById('customer-cpf').value || 'Não informado';
-            const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-            
-            let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            let change = 0;
-            
-            if (paymentMethod === 'Dinheiro') {
-                const cashReceived = parseFloat(cashChangeInput.value);
-                
-                if (isNaN(cashReceived)) {
-                    alert('Informe o valor recebido em dinheiro!');
-                    return;
-                }
-                
-                if (cashReceived < total) {
-                    alert('Valor recebido é menor que o total da compra!');
-                    return;
-                }
-                
-                change = cashReceived - total;
-            }
-            
-            // Atualiza o estoque
-            cart.forEach(item => {
-                const product = products.find(p => p.id === item.id);
-                product.stock -= item.quantity;
-            });
-            
-            // Cria o recibo
-            generateReceipt(customerName, customerCpf, paymentMethod, change);
-            
-            // Adiciona ao histórico de vendas
-            const sale = {
-                date: new Date(),
-                items: [...cart],
-                total,
-                customerName,
-                paymentMethod
-            };
-            
-            salesHistory.unshift(sale);
-            
-            // Limpa o carrinho
-            cart = [];
-            updateCart();
-            document.getElementById('customer-name').value = '';
-            document.getElementById('customer-cpf').value = '';
-            document.getElementById('cash').checked = true;
-            cashChangeContainer.style.display = 'none';
-            cashChangeInput.value = '';
-            
-            // Mostra o recibo
-            receipt.style.display = 'block';
-        }
-
-        // Gera o recibo da venda
-        function generateReceipt(customerName, customerCpf, paymentMethod, change = 0) {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString();
-            const timeStr = now.toLocaleTimeString();
-            
-            let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            let receiptHTML = `
-                <div class="receipt-line">Data: ${dateStr} ${timeStr}</div>
-                <div class="receipt-line">Cliente: ${customerName}</div>
-                <div class="receipt-line">CPF: ${customerCpf}</div>
-                <div class="receipt-line">--------------------------------</div>
-            `;
-            
-            cart.forEach(item => {
-                receiptHTML += `
-                    <div class="receipt-line">
-                        <span>${item.name} x${item.quantity}</span>
-                        <span>R$ ${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                `;
-            });
-            
-            receiptHTML += `
-                <div class="receipt-line">--------------------------------</div>
-                <div class="receipt-line receipt-total">
-                    <span>TOTAL:</span>
-                    <span>R$ ${total.toFixed(2)}</span>
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Configurações</h2>
+            <hr>
+            <h3>Plano de Fundo</h3>
+            <div class="background-options">
+                <label>
+                    <input type="radio" name="background-image" value="none" checked> Nenhuma
+                </label>
+                <label>
+                    <input type="radio" name="background-image" value="images/bg1.jpg"> Imagem 1
+                </label>
+                <label>
+                    <input type="radio" name="background-image" value="images/bg2.jpg"> Imagem 2
+                </label>
+                <label>
+                    <input type="radio" name="background-image" value="images/bg3.jpg"> Imagem 3
+                </label>
                 </div>
-                <div class="receipt-line">Forma de pagamento: ${paymentMethod}</div>
-            `;
-            
-            if (paymentMethod === 'Dinheiro') {
-                receiptHTML += `
-                    <div class="receipt-line">Troco: R$ ${change.toFixed(2)}</div>
-                `;
-            }
-            
-            receiptHTML += `
-                <div class="receipt-line">--------------------------------</div>
-                <div class="receipt-line" style="text-align: center;">Obrigado pela preferência!</div>
-                <div class="receipt-line" style="text-align: center;">Volte sempre!</div>
-            `;
-            
-            receiptContent.innerHTML = receiptHTML;
-        }
+            <p style="font-size: 0.8em; color: var(--secondary-text); margin-top: 1rem;">
+                * Para usar suas próprias imagens, coloque-as na pasta `images/` e adicione mais opções acima, apontando para elas.
+            </p>
+        </div>
+    </div>
 
-        // Função para imprimir o recibo
-        function printReceipt() {
-            window.print();
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
